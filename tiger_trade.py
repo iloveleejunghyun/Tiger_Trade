@@ -114,32 +114,74 @@ def funcs(driver):
     #         print('traded', dic)
 
     #3. trade now
-    #go back
-    el1 = driver.find_element_by_id("com.tigerbrokers.stock:id/fab_image_btn_left")
-    el1.click()
-    
-    el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_market_image")
-    el2.click()
+    # back_to_main(driver)
+
+    trade(driver, "TTT", 100, 1, False)
+    # trade(driver, "TTT", 1.1, 2, True)
+    # trade(driver, "皇家加勒比邮轮", 1.2, 3, True)
+
+
+def trade(driver, stock_name, stock_price, stock_count, direction):
+    back_to_main(driver)
+
+    try:
+        el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_market_image")
+        el2.click()
+    except:
+        pass
+    #search
     el3 = driver.find_element_by_id("com.tigerbrokers.stock:id/fab_image_btn_right_2")
     el3.click()
+    sleep(3) 
     el4 = driver.find_element_by_id("com.tigerbrokers.stock:id/edit_ab_search_stock")
-    el4.send_keys("TTT")
-    el5 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.RelativeLayout/androidx.viewpager.widget.ViewPager/android.widget.FrameLayout/android.view.ViewGroup/android.widget.LinearLayout/androidx.recyclerview.widget.RecyclerView/android.widget.LinearLayout[2]/android.widget.LinearLayout")
-    el5.click()
+    el4.send_keys(stock_name)
+    while True:
+        try:
+            sleep(3)
+            el5 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.RelativeLayout/androidx.viewpager.widget.ViewPager/android.widget.FrameLayout/android.view.ViewGroup/android.widget.LinearLayout/androidx.recyclerview.widget.RecyclerView/android.widget.LinearLayout[2]/android.widget.LinearLayout")
+            el5.click()
+            break
+        except:
+            pass
+    sleep(3) 
     el6 = driver.find_element_by_id("com.tigerbrokers.stock:id/image_tabbar_account_type")
     el6.click()
-    el7 = driver.find_element_by_id("com.tigerbrokers.stock:id/bg_image_buy_in")
-    el7.click()
-    el8 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.view.ViewGroup/android.widget.FrameLayout/androidx.drawerlayout.widget.DrawerLayout/android.widget.RelativeLayout/android.widget.ScrollView/android.widget.LinearLayout/android.widget.FrameLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.RelativeLayout/android.widget.EditText")
-    el8.send_keys("40")
+    sleep(3) 
+
+    #buy or sell
+    if direction == True:
+        el7 = driver.find_element_by_id("com.tigerbrokers.stock:id/bg_image_buy_in")
+        el7.click()
+    else:
+        el7 = driver.find_element_by_id("com.tigerbrokers.stock:id/bg_image_sell")
+        el7.click()
+    sleep(3)
+
+    # edit the price and amount
+    eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/edit_number")
+    eles[0].send_keys(str(stock_price))
+    eles[1].send_keys(str(stock_count))
+
+    sleep(3) 
     el9 = driver.find_element_by_id("com.tigerbrokers.stock:id/btn_place_order_submit")
     el9.click()
-    el10 = driver.find_element_by_id("com.tigerbrokers.stock:id/place_order_holdings_and_orders_market")
-    el10.click()
 
-    
-
-    com.tigerbrokers.stock:id/edit_number
+def back_to_main(driver):
+    #go back
+    # el1 = driver.find_element_by_id("com.tigerbrokers.stock:id/fab_image_btn_left")
+    # el1.click()
+    # sleep(3) 
+    while True:
+        sleep(3)
+        try:
+            el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_market_image")
+            return
+        except Exception as e:
+            try:
+                el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_market_lottie")
+                return
+            except Exception:
+                driver.press_keycode(4)
 
 def time_ok(tss1):
     # 转为时间数组
