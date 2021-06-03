@@ -75,52 +75,67 @@ def funcs(driver):
     # el1 = driver.find_element_by_accessibility_id("老虎证券Tiger Trade")
     # el1.click()
 
-    #query records
-    # sleep(3)
-    # el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_trade_image")
-    # el2.click()
+    stock_list = []
+    stock_list.append(("TTT", 42.27, 239, '买入'))
+    stock_list.append(("TTT", 45, 1, '卖出'))
+    
+    #check the successful order
+    trade_list = check_order(driver, stock_list)
 
-    # sleep(3)
-    # el3 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/androidx.drawerlayout.widget.DrawerLayout/android.widget.LinearLayout/android.widget.FrameLayout/androidx.viewpager.widget.ViewPager/androidx.drawerlayout.widget.DrawerLayout/android.widget.FrameLayout/android.widget.LinearLayout/androidx.viewpager.widget.ViewPager/androidx.recyclerview.widget.RecyclerView/android.widget.FrameLayout/android.widget.LinearLayout/android.view.ViewGroup/androidx.recyclerview.widget.RecyclerView/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.TextView")
-    # el3 = driver.find_element_by_accessibility_id("订单")
-    # el3.click()
+    #trade for the cancelled order
+    print('to trade today', trade_list)
+    for stock_info in trade_list:
+        trade(driver, stock_info[0], stock_info[1], stock_info[2], stock_info[3])
+
+
+def check_order(driver, stock_list):
+    back_to_main(driver)
+
+    #query records
+    sleep(3)
+    el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_trade_image")
+    el2.click()
 
     sleep(3)
-    # el4 = driver.find_element_by_accessibility_id("已成交")
-    # el4 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.view.ViewGroup/android.widget.FrameLayout[2]/android.widget.LinearLayout/android.widget.HorizontalScrollView/android.widget.LinearLayout/android.widget.TextView[2]")
-    # el4.click()
+    el3 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/androidx.drawerlayout.widget.DrawerLayout/android.widget.LinearLayout/android.widget.FrameLayout/androidx.viewpager.widget.ViewPager/androidx.drawerlayout.widget.DrawerLayout/android.widget.FrameLayout/android.widget.LinearLayout/androidx.viewpager.widget.ViewPager/androidx.recyclerview.widget.RecyclerView/android.widget.FrameLayout/android.widget.LinearLayout/android.view.ViewGroup/androidx.recyclerview.widget.RecyclerView/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.TextView")
+    el3.click()
+
+    sleep(3)
+    el4 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.view.ViewGroup/android.widget.FrameLayout[2]/android.widget.LinearLayout/android.widget.HorizontalScrollView/android.widget.LinearLayout/android.widget.TextView[2]")
+    el4.click()
 
     sleep(3)    
-    # eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_name")
-    # record_arr = [dict() for _ in range(len(eles))]
-    # for i in range(len(eles)):
-    #     record_arr[i]['name'] = eles[i].text
+    eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_code")
+    record_arr = [dict() for _ in range(len(eles))]
+    for i in range(len(eles)):
+        record_arr[i]['name'] = eles[i].text
     
-    # eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_orientation")
-    # for i in range(len(eles)):
-    #     record_arr[i]['orientation'] = eles[i].text
+    eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_orientation")
+    for i in range(len(eles)):
+        record_arr[i]['orientation'] = eles[i].text
     	
-    # eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_price")
-    # for i in range(len(eles)):
-    #     record_arr[i]['price'] = eles[i].text
+    eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_price")
+    for i in range(len(eles)):
+        record_arr[i]['price'] = float(eles[i].text)
+
+    eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_quantity")
+    for i in range(len(eles)):
+        record_arr[i]['count'] = int(eles[i].text)
+
     
-    # eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_deal_date")
-    # for i in range(len(eles)):
-    #     record_arr[i]['date'] = eles[i].text
+    eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_deal_date")
+    for i in range(len(eles)):
+        record_arr[i]['date'] = eles[i].text
 
     # print(record_arr)
-    # for dic in record_arr:
-    #     if time_ok(dic['date']):
-    #         print('traded', dic)
-
-    #3. trade now
-    # back_to_main(driver)
-
-    trade(driver, "TTT", 100, 1, False)
-    # trade(driver, "TTT", 1.1, 2, True)
-    # trade(driver, "皇家加勒比邮轮", 1.2, 3, True)
-
-
+    new_list = []
+    for dic in record_arr:
+        if time_ok(dic['date']):
+            if (dic['name'], dic['price'], dic['count'], dic['orientation']) in stock_list:
+                print('traded', dic)
+                stock_list.remove((dic['name'], dic['price'], dic['count'], dic['orientation']))
+    return stock_list
+    
 def trade(driver, stock_name, stock_price, stock_count, direction):
     back_to_main(driver)
 
@@ -149,7 +164,7 @@ def trade(driver, stock_name, stock_price, stock_count, direction):
     sleep(3) 
 
     #buy or sell
-    if direction == True:
+    if direction == '买入':
         el7 = driver.find_element_by_id("com.tigerbrokers.stock:id/bg_image_buy_in")
         el7.click()
     else:
@@ -172,9 +187,9 @@ def back_to_main(driver):
     # el1.click()
     # sleep(3) 
     while True:
-        sleep(3)
         try:
             el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_market_image")
+            el2.click()
             return
         except Exception as e:
             try:
@@ -182,6 +197,7 @@ def back_to_main(driver):
                 return
             except Exception:
                 driver.press_keycode(4)
+                sleep(3)
 
 def time_ok(tss1):
     # 转为时间数组
