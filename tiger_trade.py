@@ -1,3 +1,4 @@
+from genericpath import exists
 import sys 
 sys.path.append('./')
 import os
@@ -69,25 +70,6 @@ def wait_click(driver, element, time, by):
     else:
         return text
 
-
-def funcs(driver):
-    #open the app
-    # el1 = driver.find_element_by_accessibility_id("老虎证券Tiger Trade")
-    # el1.click()
-
-    stock_list = []
-    stock_list.append(("TTT", 42.27, 239, '买入'))
-    stock_list.append(("TTT", 45, 1, '卖出'))
-    
-    #check the successful order
-    trade_list = check_order(driver, stock_list)
-
-    #trade for the cancelled order
-    print('to trade today', trade_list)
-    for stock_info in trade_list:
-        trade(driver, stock_info[0], stock_info[1], stock_info[2], stock_info[3])
-
-
 def check_order(driver, stock_list):
     back_to_main(driver)
 
@@ -134,6 +116,7 @@ def check_order(driver, stock_list):
             if (dic['name'], dic['price'], dic['count'], dic['orientation']) in stock_list:
                 print('traded', dic)
                 stock_list.remove((dic['name'], dic['price'], dic['count'], dic['orientation']))
+                append_history_orders([(dic['name'], dic['price'], dic['count'], dic['orientation'], dic['date'])])
     return stock_list
     
 def trade(driver, stock_name, stock_price, stock_count, direction):
@@ -183,9 +166,15 @@ def trade(driver, stock_name, stock_price, stock_count, direction):
 
 def back_to_main(driver):
     #go back
-    # el1 = driver.find_element_by_id("com.tigerbrokers.stock:id/fab_image_btn_left")
-    # el1.click()
-    # sleep(3) 
+
+    # open the app
+    try:
+        el1 = driver.find_element_by_accessibility_id("老虎证券Tiger Trade")
+        el1.click()
+        sleep(6)
+    except:
+        pass
+
     while True:
         try:
             el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_market_image")
@@ -208,8 +197,55 @@ def time_ok(tss1):
         return True
     return False
     
+def read_orders():
+    orders = []
+    with open("orders.txt",encoding="utf-8") as f:
+        for line in f.readlines():
+            try:
+                params = line.split(",")
+                code = params[0].split("=")[1].strip()
+                price = float(params[1].split("=")[1])
+                count = int(params[2].split("=")[1])
+                direction = params[3].split("=")[1].strip()
+                orders.append((code, price, count, direction))
+            except:
+                pass
+    return orders
+
+def update_orders(updated_orders):
+    history_order_path = "orders.txt"
+    if not os.path.exists(history_order_path):
+        with open(history_order_path, "w"):
+            pass
+    with open (history_order_path, "w", encoding="utf-8") as f:
+        for order in updated_orders:
+            f.write(f"code={order[0]},price={order[1]},count={order[2]}, direction={order[3]}\n")
+
+def append_history_orders(history_orders):
+    history_order_path = "history_orders.txt"
+    if not os.path.exists(history_order_path):
+        with open(history_order_path, "w"):
+            pass
+    with open (history_order_path, "a", encoding="utf-8") as f:
+        for order in history_orders:
+            f.write(f"code={order[0]},price={order[1]},count={order[2]}, direction={order[3]}, date={order[4]}\n")
+
+def close_current_app(driver):
+    try:
+        driver.terminate_app(driver.current_package)
+    except Exception:
+        pass
+
 def run1():
     driver = init_driver()
-    funcs(driver)
-
+    orders = read_orders()
+    print("read", orders)
+    #check the successful order
+    trade_list = check_order(driver, orders)
+    update_orders(trade_list)
+    #trade for the cancelled order
+    print('to trade today', trade_list)
+    for stock_info in trade_list:
+        trade(driver, stock_info[0], stock_info[1], stock_info[2], stock_info[3])
+    close_current_app(driver)
 run1()
