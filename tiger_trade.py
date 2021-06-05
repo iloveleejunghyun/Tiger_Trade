@@ -70,7 +70,7 @@ def wait_click(driver, element, time, by):
     else:
         return text
 
-def check_order(driver, stock_list):
+def check_order(driver, stock_list, cash=False):
     back_to_main(driver)
 
     #query records
@@ -78,13 +78,24 @@ def check_order(driver, stock_list):
     el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_trade_image")
     el2.click()
 
+    #click order
     sleep(3)
-    el3 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/androidx.drawerlayout.widget.DrawerLayout/android.widget.LinearLayout/android.widget.FrameLayout/androidx.viewpager.widget.ViewPager/androidx.drawerlayout.widget.DrawerLayout/android.widget.FrameLayout/android.widget.LinearLayout/androidx.viewpager.widget.ViewPager/androidx.recyclerview.widget.RecyclerView/android.widget.FrameLayout/android.widget.LinearLayout/android.view.ViewGroup/androidx.recyclerview.widget.RecyclerView/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.TextView")
-    el3.click()
+    if cash:
+        el3 = driver.find_element_by_id("com.tigerbrokers.stock:id/stock_trade_entry_order")
+        el3.click()
+    else:
+        el3 = driver.find_element_by_id("com.tigerbrokers.stock:id/layout_btn_virtual_trade_order")
+        # el3 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/androidx.drawerlayout.widget.DrawerLayout/android.widget.LinearLayout/android.widget.FrameLayout/androidx.viewpager.widget.ViewPager/androidx.drawerlayout.widget.DrawerLayout/android.widget.FrameLayout/android.widget.LinearLayout/androidx.viewpager.widget.ViewPager/androidx.recyclerview.widget.RecyclerView/android.widget.FrameLayout/android.widget.LinearLayout/android.view.ViewGroup/androidx.recyclerview.widget.RecyclerView/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.TextView")
+        el3.click()
 
+    #已成交
     sleep(3)
-    el4 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.view.ViewGroup/android.widget.FrameLayout[2]/android.widget.LinearLayout/android.widget.HorizontalScrollView/android.widget.LinearLayout/android.widget.TextView[2]")
-    el4.click()
+    if cash:
+        el4 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.view.ViewGroup/android.widget.FrameLayout/android.widget.LinearLayout/androidx.viewpager.widget.ViewPager/androidx.recyclerview.widget.RecyclerView/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.HorizontalScrollView/android.widget.LinearLayout/android.widget.TextView[2]")
+        el4.click()
+    else:
+        el4 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.view.ViewGroup/android.widget.FrameLayout[2]/android.widget.LinearLayout/android.widget.HorizontalScrollView/android.widget.LinearLayout/android.widget.TextView[2]")
+        el4.click()
 
     sleep(3)    
     eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/text_item_order_history_code")
@@ -116,7 +127,7 @@ def check_order(driver, stock_list):
             if (dic['name'], dic['price'], dic['count'], dic['orientation']) in stock_list:
                 print('traded', dic)
                 stock_list.remove((dic['name'], dic['price'], dic['count'], dic['orientation']))
-                append_history_orders([(dic['name'], dic['price'], dic['count'], dic['orientation'], dic['date'])])
+                append_history_orders([(dic['name'], dic['price'], dic['count'], dic['orientation'], dic['date'])], cash)
     return stock_list
     
 def trade(driver, stock_name, stock_price, stock_count, direction):
@@ -144,7 +155,7 @@ def trade(driver, stock_name, stock_price, stock_count, direction):
     sleep(3) 
     el6 = driver.find_element_by_id("com.tigerbrokers.stock:id/image_tabbar_account_type")
     el6.click()
-    sleep(3) 
+    sleep(3)
 
     #buy or sell
     if direction == '买入':
@@ -155,6 +166,8 @@ def trade(driver, stock_name, stock_price, stock_count, direction):
         el7.click()
     sleep(3)
 
+    input_trade_pass(driver)
+
     # edit the price and amount
     eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/edit_number")
     eles[0].send_keys(str(stock_price))
@@ -164,8 +177,17 @@ def trade(driver, stock_name, stock_price, stock_count, direction):
     el9 = driver.find_element_by_id("com.tigerbrokers.stock:id/btn_place_order_submit")
     el9.click()
 
+def input_trade_pass(driver):
+    com.tigerbrokers.stock:id/title
+    if ele.text == "请输入交易密码":
+
 def back_to_main(driver):
-    #go back
+    #advertisement
+    try:
+        el1 = driver.find_element_by_accessibility_id("关闭弹框")
+        el1.click()
+    except:
+        pass
 
     # open the app
     try:
@@ -197,9 +219,12 @@ def time_ok(tss1):
         return True
     return False
     
-def read_orders():
+def read_orders(cash=False):
     orders = []
-    with open("orders.txt",encoding="utf-8") as f:
+    order_path = "orders.txt"
+    if cash == True:
+        order_path = "cash_orders.txt"
+    with open(order_path, 'r', encoding="utf-8") as f:
         for line in f.readlines():
             try:
                 params = line.split(",")
@@ -212,17 +237,21 @@ def read_orders():
                 pass
     return orders
 
-def update_orders(updated_orders):
-    history_order_path = "orders.txt"
-    if not os.path.exists(history_order_path):
-        with open(history_order_path, "w"):
+def update_orders(updated_orders, cash=False):
+    order_path = "orders.txt"
+    if cash == True:
+        order_path = "cash_orders.txt"
+    if not os.path.exists(order_path):
+        with open(order_path, "w"):
             pass
-    with open (history_order_path, "w", encoding="utf-8") as f:
+    with open (order_path, "w", encoding="utf-8") as f:
         for order in updated_orders:
             f.write(f"code={order[0]},price={order[1]},count={order[2]}, direction={order[3]}\n")
 
-def append_history_orders(history_orders):
+def append_history_orders(history_orders, cash=False):
     history_order_path = "history_orders.txt"
+    if cash == True:
+        history_order_path = "cash_history_orders.txt"
     if not os.path.exists(history_order_path):
         with open(history_order_path, "w"):
             pass
@@ -236,16 +265,37 @@ def close_current_app(driver):
     except Exception:
         pass
 
-def run1():
-    driver = init_driver()
-    orders = read_orders()
+def switch_account(driver, cash=False):
+    back_to_main(driver)
+    sleep(2)
+    el2 = driver.find_element_by_id("com.tigerbrokers.stock:id/text_main_bottom_trade_image")
+    el2.click()
+    sleep(2)
+    el3 = driver.find_element_by_id("com.tigerbrokers.stock:id/fab_text_action_left")
+    el3.click()
+    sleep(2)
+    eles = driver.find_elements_by_id("com.tigerbrokers.stock:id/account_title")
+    print(len(eles))
+    if cash == True:
+        eles[0].click()
+    else:
+        eles[1].click()
+
+
+def run():
+    cash = True
+
+    orders = read_orders(cash)
     print("read", orders)
+
+    driver = init_driver()
+    switch_account(driver, cash)
     #check the successful order
-    trade_list = check_order(driver, orders)
-    update_orders(trade_list)
+    trade_list = check_order(driver, orders, cash)
+    update_orders(trade_list, cash)
     #trade for the cancelled order
     print('to trade today', trade_list)
     for stock_info in trade_list:
         trade(driver, stock_info[0], stock_info[1], stock_info[2], stock_info[3])
     close_current_app(driver)
-run1()
+run()
