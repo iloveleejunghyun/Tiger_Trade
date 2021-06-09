@@ -11,6 +11,9 @@ import time, datetime
 from poco.drivers.android.uiautomation import AndroidUiautomationPoco
 poco = AndroidUiautomationPoco(use_airtest_input=True, screenshot_each_action=False)
 
+dev = connect_device("android://127.0.0.1:5037/127.0.0.1:62001?cap_method=JAVACAP&&ori_method=ADBORI&&touch_method=MINITOUCH")
+
+
 def wait_click(temp_list):
     if type(temp_list) is not list:
         temp_list = [temp_list]
@@ -27,12 +30,6 @@ def wait_click(temp_list):
                     pass
         if find == False:
             return
-        
-def start_tiger():
-    start_app("com.tigerbrokers.stock")
-    
-# def close_tiger():
-#     close_app("com.tigerbrokers.stock")
     
 def back_to_main():
     #advertisement
@@ -196,16 +193,17 @@ def input_trade_pass():
 def run():
     start_app("com.tigerbrokers.stock")
     sleep(10)
-    cash = True
-    orders = read_orders(cash)
-    print("read", orders)
-    switch_account(cash)
-    trade_list = check_order(orders, cash)
-    print("to trade",trade_list)
-    update_orders(trade_list, cash)
-    for stock_info in trade_list:
-        trade(stock_info[0], stock_info[1], stock_info[2], stock_info[3])
-    sleep(5)
+    accounts = [True,False]
+    for cash in accounts:
+        orders = read_orders(cash)
+        print("read", orders)
+        switch_account(cash)
+        trade_list = check_order(orders, cash)
+        print("to trade",trade_list)
+        update_orders(trade_list, cash)
+        for stock_info in trade_list:
+            trade(stock_info[0], stock_info[1], stock_info[2], stock_info[3])
+        sleep(5)
     stop_app("com.tigerbrokers.stock")
 run()
 # poco("com.tigerbrokers.stock:id/trade_entry_point").children(desc="交易").click()
