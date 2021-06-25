@@ -32,10 +32,14 @@ def wait_click(temp_list):
             return
     
 def back_to_main():
+    ele = poco("com.tigerbrokers.stock:id/btn_cancel")
+    if ele:
+        ele.click()
     #advertisement
     ele = poco(desc="关闭弹框")
     if ele:
         ele.click()
+
 
 
     while True:
@@ -191,6 +195,8 @@ def input_trade_pass():
 # start_tiger()
 # sleep(10)
 def run():
+    stop_app("com.tigerbrokers.stock")
+    sleep(5)
     start_app("com.tigerbrokers.stock")
     sleep(10)
     accounts = [True,False]

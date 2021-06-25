@@ -1,1 +1,1 @@
-code=NCLH,price=25.3,count=3, direction=买入
+code=NCLH,price=1.0,count=1, direction=买入
