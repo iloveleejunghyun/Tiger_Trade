@@ -195,21 +195,24 @@ def input_trade_pass():
 # start_tiger()
 # sleep(10)
 def run():
-    stop_app("com.tigerbrokers.stock")
-    sleep(5)
-    start_app("com.tigerbrokers.stock")
-    sleep(10)
-    accounts = [True,False]
-    for cash in accounts:
-        orders = read_orders(cash)
-        print("read", orders)
-        switch_account(cash)
-        trade_list = check_order(orders, cash)
-        print("to trade",trade_list)
-        update_orders(trade_list, cash)
-        for stock_info in trade_list:
-            trade(stock_info[0], stock_info[1], stock_info[2], stock_info[3])
+    try:
+        stop_app("com.tigerbrokers.stock")
         sleep(5)
+        start_app("com.tigerbrokers.stock")
+        sleep(10)
+        accounts = [True,False]
+        for cash in accounts:
+            orders = read_orders(cash)
+            print("read", orders)
+            switch_account(cash)
+            trade_list = check_order(orders, cash)
+            print("to trade",trade_list)
+            update_orders(trade_list, cash)
+            for stock_info in trade_list:
+                trade(stock_info[0], stock_info[1], stock_info[2], stock_info[3])
+            sleep(5)
+    except Exception as e:
+        print(e)
     stop_app("com.tigerbrokers.stock")
 run()
 # poco("com.tigerbrokers.stock:id/trade_entry_point").children(desc="交易").click()
