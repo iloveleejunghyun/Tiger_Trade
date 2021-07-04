@@ -13,6 +13,43 @@ poco = AndroidUiautomationPoco(use_airtest_input=True, screenshot_each_action=Fa
 
 dev = connect_device("android://127.0.0.1:5037/127.0.0.1:62001?cap_method=JAVACAP&&ori_method=ADBORI&&touch_method=MINITOUCH")
 
+import logging
+# logger=logging.getLogger("airtest")
+def initLog(level=logging.DEBUG,filename="pocoLog.txt"):
+    '''初始化日志配置
+    @param level:设置的日志级别。默认：DEBUG
+    @param filename: 日志文件名。默认：当前目录下的pocoLog.txt，也可为绝对路径名
+    '''
+    logger = logging.getLogger(__name__.split('.')[0])    #日志名为当前包路径project.util.common的
+    logger.setLevel(level)
+    if logger.handlers:
+        for handler in logger.handlers:
+            logger.removeHandler(handler)
+    streamHandler = logging.StreamHandler(sys.stderr) #输出到控制台
+    fileHandler=logging.FileHandler(filename=filename,mode='w',encoding='utf-8',delay=False)
+    LOG_FORMAT1='[%(asctime)s] [%(levelname)s] <%(name)s> (%(lineno)d) %(message)s'  
+    LOG_FORMAT2='[%(asctime)s] [%(levelname)s] <%(name)s> <%(pathname)s]> (%(lineno)d) %(message)s'
+    formatter1 = logging.Formatter(
+        fmt=LOG_FORMAT1,
+        datefmt='%Y-%m-%d  %H:%M:%S'
+    )
+    formatter2 = logging.Formatter(
+        fmt=LOG_FORMAT2,
+        datefmt='%Y-%m-%d  %H:%M:%S'
+    )    
+    streamHandler.setFormatter(formatter1)
+    fileHandler.setFormatter(formatter2)
+    logger.addHandler(streamHandler)
+    logger.addHandler(fileHandler)
+    #logger.debug('这里是测试用，initlog的logger的debug日志') 
+def setPocoLog(name):
+    '''设置poco日志配置'''
+    pocoLogDIR= os.path.join(ST.PROJECT_ROOT, 'logDir') #poco日志目录
+    pocoLogFile=os.path.join(pocoLogDIR,'pocoLog.txt')  #poco日志文件名
+    initLog(level=logging.INFO,filename=pocoLogFile)    #poco日志初始化
+    logger=logging.getLogger(name)
+    return logger
+logger = setPocoLog(__name__) #日志方法调用
 
 def wait_click(temp_list):
     if type(temp_list) is not list:
@@ -81,12 +118,12 @@ def check_order(stock_list, cash=False):
     for i in range(len(eles)):
         record_arr[i]['date'] = eles[i].get_text()
 
-    # print(record_arr)
+    # logger.info(record_arr)
     new_list = []
     for dic in record_arr:
         if time_ok(dic['date']):
             if (dic['code'], dic['price'], dic['count'], dic['orientation']) in stock_list:
-                print('traded', dic)
+                logger.info(f'traded {dic}')
                 stock_list.remove((dic['code'], dic['price'], dic['count'], dic['orientation']))
                 append_history_orders([(dic['code'], dic['price'], dic['count'], dic['orientation'], dic['date'])], cash)
     return stock_list
@@ -147,7 +184,7 @@ def switch_account(cash=False):
     poco("com.tigerbrokers.stock:id/fab_text_action_left").click()
     
     eles = poco("com.tigerbrokers.stock:id/account_title")
-    print(len(eles))
+    logger.info(len(eles))
     if cash == True:
         eles[0].click()
         poco("com.tigerbrokers.stock:id/stock_trade_entry_deal").click()
@@ -190,12 +227,9 @@ def input_trade_pass():
 
 
 
-# res = poco("com.tigerbrokers.stock:id/text_item_order_history_code")
-# print(res[0].get_text(), res[1].get_text(), res[2].get_text())
-# start_tiger()
-# sleep(10)
 def run():
     try:
+        logger.info("start to trade")
         stop_app("com.tigerbrokers.stock")
         sleep(5)
         start_app("com.tigerbrokers.stock")
@@ -203,16 +237,16 @@ def run():
         accounts = [True,False]
         for cash in accounts:
             orders = read_orders(cash)
-            print("read", orders)
+            logger.info(f"read {orders}")
             switch_account(cash)
             trade_list = check_order(orders, cash)
-            print("to trade",trade_list)
+            logger.info(f"to trade {trade_list}")
             update_orders(trade_list, cash)
             for stock_info in trade_list:
                 trade(stock_info[0], stock_info[1], stock_info[2], stock_info[3])
             sleep(5)
     except Exception as e:
-        print(e)
+        logger.error(e)
     stop_app("com.tigerbrokers.stock")
 run()
 # poco("com.tigerbrokers.stock:id/trade_entry_point").children(desc="交易").click()
