@@ -1,4 +1,6 @@
 # -*- encoding=utf8 -*-
+#todo 目前只支持一个股票一个挂单（买入/卖出分别一个），因为实际买入卖出价格可能与挂单价不同，不好判断。
+
 __author__ = "Administrator"
 
 from airtest.core.api import *
@@ -87,7 +89,7 @@ def back_to_main():
             else:
                 keyevent("KEYCODE_BACK")
                 sleep(2)
-def check_order(stock_list, cash=False):
+def check_order(orders, stock_list, cash=False):
     back_to_main()
     poco(text="交易").click()
 
@@ -122,23 +124,28 @@ def check_order(stock_list, cash=False):
     new_list = []
     for dic in record_arr:
         if time_ok(dic['date']):
-            if (dic['code'], dic['price'], dic['count'], dic['orientation']) in stock_list:
+            if (dic['code'], dic['count'], dic['orientation']) in stock_list:
                 logger.info(f'traded {dic}')
-                stock_list.remove((dic['code'], dic['price'], dic['count'], dic['orientation']))
+                for order in orders:
+                    if order[0] == dic['code'] and order[2] == dic['count'] and order[3] == dic['orientation']:
+                        orders.remove(order)
+                        break
+                stock_list.remove((dic['code'], dic['count'], dic['orientation']))
                 append_history_orders([(dic['code'], dic['price'], dic['count'], dic['orientation'], dic['date'])], cash)
-    return stock_list
+    return orders
 
 def time_ok(tss1):
     # 转为时间数组
     timeArray = time.strptime(tss1, "%Y/%m/%d")
     timeStamp = int(time.mktime(timeArray))
     now = int(time.time())
-    if (now - timeStamp) < 86400 * 7:
+    if (now - timeStamp) < 86400 * 3: #最近3天
         return True
     return False
 
 def read_orders(cash=False):
     orders = []
+    stock_list = []
     order_path = "orders.txt"
     if cash == True:
         order_path = "cash_orders.txt"
@@ -151,9 +158,10 @@ def read_orders(cash=False):
                 count = int(params[2].split("=")[1])
                 direction = params[3].split("=")[1].strip()
                 orders.append((code, price, count, direction))
+                stock_list.append((code, count, direction))
             except:
                 pass
-    return orders
+    return orders,stock_list
 
 def update_orders(updated_orders, cash=False):
     order_path = "orders.txt"
@@ -193,30 +201,43 @@ def switch_account(cash=False):
         eles[1].click()
         
 def trade(stock_code, stock_price, stock_count, direction):
-    back_to_main()
-    poco(text="行情").click()
+    try:
+        back_to_main()
+        poco(text="行情").click()
 
-    #search
-    poco("com.tigerbrokers.stock:id/fab_image_btn_right_2").click()
-    poco("com.tigerbrokers.stock:id/edit_ab_search_stock").set_text(stock_code)
-    sleep(10)
-    poco("com.tigerbrokers.stock:id/text_search_stock_code")[0].click()
-    poco("com.tigerbrokers.stock:id/text_tabbar_trade").click()
+        #search
+        poco("com.tigerbrokers.stock:id/fab_image_btn_right_2").click()
+        poco("com.tigerbrokers.stock:id/edit_ab_search_stock").set_text(stock_code)
+        sleep(10)
+        poco("com.tigerbrokers.stock:id/text_search_stock_code")[0].click()
+        poco("com.tigerbrokers.stock:id/text_tabbar_trade").click()
 
-    #buy or sell
-    if direction == '买入':
-        poco("com.tigerbrokers.stock:id/bg_image_buy_in").click()
-    else:
-        poco("com.tigerbrokers.stock:id/bg_image_sell").click()
+        #buy or sell
+        if direction == '买入':
+            poco("com.tigerbrokers.stock:id/bg_image_buy_in").click()
+        else:
+            poco("com.tigerbrokers.stock:id/bg_image_sell").click()
 
-    # edit the price and amount
-    eles = poco("com.tigerbrokers.stock:id/edit_number")
-    eles[0].set_text(str(stock_price))
-    eles[1].set_text(str(stock_count))
+        ele = poco(text="取消")
+        if ele:
+            ele.click()
+            logger.info(f"{stock_code}已经有订单了，取消")
+            return
+        # edit the price and amount
+        eles = poco("com.tigerbrokers.stock:id/edit_number")
+        eles[0].set_text(str(stock_price))
+        eles[1].set_text(str(stock_count))
+        sleep(2)
+        poco("com.tigerbrokers.stock:id/btn_place_order_submit").click()
+        logger.info(f"{stock_code}挂单成功")
+    except Exception as e:
+        logger.info(e)
 
-    poco("com.tigerbrokers.stock:id/btn_place_order_submit").click()
-
-    
+# eles = poco("com.tigerbrokers.stock:id/edit_number")
+# print(eles)
+# eles[0].set_text(str(1))
+# eles[1].set_text(str(2))
+# sleep(100)
 def input_trade_pass():
     keyevent("KEYCODE_3")
     keyevent("KEYCODE_2")
@@ -234,12 +255,12 @@ def run():
         sleep(5)
         start_app("com.tigerbrokers.stock")
         sleep(10)
-        accounts = [True,False]
+        accounts = [False,True]
         for cash in accounts:
-            orders = read_orders(cash)
+            orders,stock_list = read_orders(cash)
             logger.info(f"read {orders}")
             switch_account(cash)
-            trade_list = check_order(orders, cash)
+            trade_list = check_order(orders, stock_list, cash)
             logger.info(f"to trade {trade_list}")
             update_orders(trade_list, cash)
             for stock_info in trade_list:

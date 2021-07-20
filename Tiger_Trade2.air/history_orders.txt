@@ -1,2 +1,3 @@
 code=TTT,price=42.27,count=239, direction=买入, date=2021/06/02
 code=TTT,price=42.27,count=239, direction=买入, date=2021/06/02
+code=TQQQ,price=124.26,count=107, direction=卖出, date=2021/07/20
