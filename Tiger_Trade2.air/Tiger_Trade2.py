@@ -74,13 +74,12 @@ def back_to_main():
     ele = poco("com.tigerbrokers.stock:id/btn_cancel")
     if ele:
         ele.click()
+    sleep(1)
     #advertisement
     ele = poco(desc="关闭弹框")
     if ele:
         ele.click()
-
-
-
+    sleep(1)
     while True:
             ele = poco("com.tigerbrokers.stock:id/text_main_bottom_market")
             if ele:
@@ -92,13 +91,12 @@ def back_to_main():
 def check_order(orders, stock_list, cash=False):
     back_to_main()
     poco(text="交易").click()
-
-
+    sleep(1)
     poco(text="订单").click()
-
+    sleep(1)
     #已成交
     poco(text="已成交").click()
-
+    sleep(1)
     eles = poco("com.tigerbrokers.stock:id/text_item_order_history_code")
     record_arr = [dict() for _ in range(len(eles))]
     for i in range(len(eles)):
@@ -188,14 +186,16 @@ def append_history_orders(history_orders, cash=False):
 def switch_account(cash=False):
     back_to_main()
     poco(text="交易").click()
-    
+    sleep(1)
     poco("com.tigerbrokers.stock:id/fab_text_action_left").click()
-    
+    sleep(1)
     eles = poco("com.tigerbrokers.stock:id/account_title")
     logger.info(len(eles))
     if cash == True:
         eles[0].click()
+        sleep(1)
         poco("com.tigerbrokers.stock:id/stock_trade_entry_deal").click()
+        sleep(1)
         input_trade_pass()
     else:
         eles[1].click()
@@ -203,29 +203,35 @@ def switch_account(cash=False):
 def trade(stock_code, stock_price, stock_count, direction):
     try:
         back_to_main()
+        sleep(2)
         poco(text="行情").click()
-
+        sleep(2)
         #search
         poco("com.tigerbrokers.stock:id/fab_image_btn_right_2").click()
+        sleep(2)
         poco("com.tigerbrokers.stock:id/edit_ab_search_stock").set_text(stock_code)
         sleep(10)
         poco("com.tigerbrokers.stock:id/text_search_stock_code")[0].click()
+        sleep(2)
         poco("com.tigerbrokers.stock:id/text_tabbar_trade").click()
-
+        sleep(2)
         #buy or sell
         if direction == '买入':
             poco("com.tigerbrokers.stock:id/bg_image_buy_in").click()
         else:
             poco("com.tigerbrokers.stock:id/bg_image_sell").click()
 
+        sleep(2)
         ele = poco(text="取消")
         if ele:
             ele.click()
             logger.info(f"{stock_code}已经有订单了，取消")
             return
+        sleep(1)
         # edit the price and amount
         eles = poco("com.tigerbrokers.stock:id/edit_number")
         eles[0].set_text(str(stock_price))
+        sleep(2)
         eles[1].set_text(str(stock_count))
         sleep(2)
         poco("com.tigerbrokers.stock:id/btn_place_order_submit").click()
