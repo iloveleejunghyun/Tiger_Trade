@@ -28,7 +28,7 @@ def initLog(level=logging.DEBUG,filename="pocoLog.txt"):
         for handler in logger.handlers:
             logger.removeHandler(handler)
     streamHandler = logging.StreamHandler(sys.stderr) #输出到控制台
-    fileHandler=logging.FileHandler(filename=filename,mode='w',encoding='utf-8',delay=False)
+    fileHandler=logging.FileHandler(filename=filename,mode='a',encoding='utf-8',delay=False)
     LOG_FORMAT1='[%(asctime)s] [%(levelname)s] <%(name)s> (%(lineno)d) %(message)s'  
     LOG_FORMAT2='[%(asctime)s] [%(levelname)s] <%(name)s> <%(pathname)s]> (%(lineno)d) %(message)s'
     formatter1 = logging.Formatter(
@@ -53,51 +53,113 @@ def setPocoLog(name):
     return logger
 logger = setPocoLog(__name__) #日志方法调用
 
-def wait_click(temp_list):
-    if type(temp_list) is not list:
-        temp_list = [temp_list]
-    while True:
-        find = False
-        for temp in temp_list:
-            pos =  exists(temp)
-            if pos:
-                try:
-                    touch(pos)
-                    find = True
-                    sleep(2)
-                except:
-                    pass
-        if find == False:
-            return
+def pclick(id = None, text = None, textMatches = None):
+    if id != None:
+        ele = poco(id)
+        if ele:
+            ele.click()     
+            return True
+     #   logger.info(f"Didn't Find {id}") 
+    elif text != None:
+        ele = poco(text = text)
+        if ele:
+            ele.click()
+       #     logger.info(f"Found {text}")
+            return True
+       # logger.info(f"Didn't Find  {text}")
+    else:
+        ele = poco(textMatches = textMatches)
+        if ele:
+            ele.click()
+       #     logger.info(f"Found {textMatches}")
+            return True
+       # logger.info(f"Didn't Find  {textMatches}")
+    return False
+
+def pwait_click(id = None, text = None, textMatches = None, times=5, disapear=True):
+    res = False
+    cur_res = False
+    for i in range(times):
+        cur_res = pclick(id, text, textMatches)
+        if cur_res:
+            if disapear == False:
+                break
+            res = cur_res
+        else:
+            if res: #如果之前找到了就返回。没有找到过就继续找. 这里无法处理多图重复出现之间时间间隔过大的情况
+                break
+        if i == times-1:
+            break
+        sleep(1)
+    if res:
+        if id:
+            logger.info(f"Found {id}")
+        elif text:
+            logger.info(f"Found {text}")
+        else:
+            logger.info(f"Found {textMatches}")
+    else:
+        if id:
+            logger.info(f"Didn't Find {id}")
+        elif text:
+            logger.info(f"Didn't Find {text}")
+        else:
+            logger.info(f"Didn't Find {textMatches}")
+    return res
+
+def pwait_until(id = None, text = None, textMatches = None, times = 10):
+    if id == None and text == None:
+        return True
+    for _ in range(times):
+        if id != None:
+            if poco(id):
+                logger.info(f"Found {id}")
+                return True
+        elif text != None:
+            if poco(text = text):
+                logger.info(f"Found {text}")
+                return True
+        else:
+            if poco(textMatches = textMatches):
+                logger.info(f"Found {textMatches}")
+                return True
+        sleep(1)
+    if id != None:
+        logger.info(f"Didn't Find {id}")
+    elif text != None:
+        logger.info(f"Didn't Find  {text}")
+    else:
+        logger.info(f"Didn't Find  {textMatches}")
+    return False
+
     
 def back_to_main():
-    ele = poco("com.tigerbrokers.stock:id/btn_cancel")
-    if ele:
-        ele.click()
-    sleep(1)
+    pwait_click("com.tigerbrokers.stock:id/btn_cancel")
+
     #advertisement
-    ele = poco(desc="关闭弹框")
-    if ele:
-        ele.click()
-    sleep(1)
-    while True:
-            ele = poco("com.tigerbrokers.stock:id/text_main_bottom_market")
-            if ele:
-                ele.click()
-                return
-            else:
-                keyevent("KEYCODE_BACK")
-                sleep(2)
+    pwait_click(text="关闭弹框",times=1)
+
+    for _ in range(5):
+        if not pwait_click("com.tigerbrokers.stock:id/text_main_bottom_market",times=1):
+            pwait_click(text="关闭弹框",times=1)
+            keyevent("KEYCODE_BACK")
+            sleep(2)
+        else:
+            return
+            
 def check_order(orders, stock_list, cash=False):
     back_to_main()
-    poco(text="交易").click()
-    sleep(1)
-    poco(text="订单").click()
-    sleep(1)
+
+    pwait_click("com.tigerbrokers.stock:id/text_main_bottom_trade")
+    pwait_click(text="订单")
     #已成交
-    poco(text="已成交").click()
-    sleep(1)
+    pwait_click(text="已成交")
+    if not pwait_until("com.tigerbrokers.stock:id/text_item_order_history_code"):
+        logger.error("没有找到历史订单，退出")
+        return orders
+    
     eles = poco("com.tigerbrokers.stock:id/text_item_order_history_code")
+        
     record_arr = [dict() for _ in range(len(eles))]
     for i in range(len(eles)):
         record_arr[i]['code'] = eles[i].get_text()
@@ -185,17 +247,16 @@ def append_history_orders(history_orders, cash=False):
 
 def switch_account(cash=False):
     back_to_main()
-    poco(text="交易").click()
-    sleep(1)
-    poco("com.tigerbrokers.stock:id/fab_text_action_left").click()
-    sleep(1)
+    
+    pwait_click("com.tigerbrokers.stock:id/text_main_bottom_trade")
+
+    pwait_click("com.tigerbrokers.stock:id/fab_text_action_left")
+    pwait_until("com.tigerbrokers.stock:id/account_title")
     eles = poco("com.tigerbrokers.stock:id/account_title")
     logger.info(len(eles))
     if cash == True:
         eles[0].click()
-        sleep(1)
-        poco("com.tigerbrokers.stock:id/stock_trade_entry_deal").click()
-        sleep(1)
+        pwait_click("com.tigerbrokers.stock:id/stock_trade_entry_deal")
         input_trade_pass()
     else:
         eles[1].click()
@@ -203,38 +264,36 @@ def switch_account(cash=False):
 def trade(stock_code, stock_price, stock_count, direction):
     try:
         back_to_main()
-        sleep(2)
-        poco(text="行情").click()
-        sleep(2)
+
+        pwait_click(text="行情")
+
         #search
-        poco("com.tigerbrokers.stock:id/fab_image_btn_right_2").click()
-        sleep(2)
+        pwait_click("com.tigerbrokers.stock:id/fab_image_btn_right_2")
+        pwait_until("com.tigerbrokers.stock:id/edit_ab_search_stock")
         poco("com.tigerbrokers.stock:id/edit_ab_search_stock").set_text(stock_code)
-        sleep(10)
-        poco("com.tigerbrokers.stock:id/text_search_stock_code")[0].click()
-        sleep(2)
-        poco("com.tigerbrokers.stock:id/text_tabbar_trade").click()
-        sleep(2)
+        pwait_until("com.tigerbrokers.stock:id/text_search_stock_code")
+        pwait_click("com.tigerbrokers.stock:id/text_search_stock_code")
+        pwait_click("com.tigerbrokers.stock:id/text_tabbar_trade")
+
         #buy or sell
         if direction == '买入':
-            poco("com.tigerbrokers.stock:id/bg_image_buy_in").click()
+            pwait_click("com.tigerbrokers.stock:id/bg_image_buy_in")
         else:
-            poco("com.tigerbrokers.stock:id/bg_image_sell").click()
+            pwait_click("com.tigerbrokers.stock:id/bg_image_sell")
 
-        sleep(2)
-        ele = poco(text="取消")
-        if ele:
-            ele.click()
+        if pwait_click(text="取消"):
             logger.info(f"{stock_code}已经有订单了，取消")
             return
-        sleep(1)
+
+        pwait_until("com.tigerbrokers.stock:id/edit_number")
         # edit the price and amount
         eles = poco("com.tigerbrokers.stock:id/edit_number")
         eles[0].set_text(str(stock_price))
         sleep(2)
         eles[1].set_text(str(stock_count))
         sleep(2)
-        poco("com.tigerbrokers.stock:id/btn_place_order_submit").click()
+        
+        pwait_click("com.tigerbrokers.stock:id/btn_place_order_submit")
         logger.info(f"{stock_code}挂单成功")
     except Exception as e:
         logger.info(e)
@@ -261,7 +320,7 @@ def run():
         sleep(5)
         start_app("com.tigerbrokers.stock")
         sleep(10)
-        accounts = [False,True]
+        accounts = [True,False]
         for cash in accounts:
             orders,stock_list = read_orders(cash)
             logger.info(f"read {orders}")
