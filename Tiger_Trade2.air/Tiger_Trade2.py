@@ -9,6 +9,7 @@ auto_setup(__file__)
 
 
 import time, datetime
+# from util import * 
 
 from poco.drivers.android.uiautomation import AndroidUiautomationPoco
 poco = AndroidUiautomationPoco(use_airtest_input=True, screenshot_each_action=False)
@@ -53,27 +54,32 @@ def setPocoLog(name):
     return logger
 logger = setPocoLog(__name__) #日志方法调用
 
+    
+
 def pclick(id = None, text = None, textMatches = None):
-    if id != None:
-        ele = poco(id)
-        if ele:
-            ele.click()     
-            return True
-     #   logger.info(f"Didn't Find {id}") 
-    elif text != None:
-        ele = poco(text = text)
-        if ele:
-            ele.click()
-       #     logger.info(f"Found {text}")
-            return True
-       # logger.info(f"Didn't Find  {text}")
-    else:
-        ele = poco(textMatches = textMatches)
-        if ele:
-            ele.click()
-       #     logger.info(f"Found {textMatches}")
-            return True
-       # logger.info(f"Didn't Find  {textMatches}")
+    try:
+        if id != None:
+            ele = poco(id)
+            if ele:
+                ele.click()     
+                return True
+         #   logger.info(f"Didn't Find {id}") 
+        elif text != None:
+            ele = poco(text = text)
+            if ele:
+                ele.click()
+           #     logger.info(f"Found {text}")
+                return True
+           # logger.info(f"Didn't Find  {text}")
+        else:
+            ele = poco(textMatches = textMatches)
+            if ele:
+                ele.click()
+           #     logger.info(f"Found {textMatches}")
+                return True
+           # logger.info(f"Didn't Find  {textMatches}")
+    except Exception as e:
+        logger.error(""+e)
     return False
 
 def pwait_click(id = None, text = None, textMatches = None, times=5, disapear=True):
@@ -111,18 +117,21 @@ def pwait_until(id = None, text = None, textMatches = None, times = 10):
     if id == None and text == None:
         return True
     for _ in range(times):
-        if id != None:
-            if poco(id):
-                logger.info(f"Found {id}")
-                return True
-        elif text != None:
-            if poco(text = text):
-                logger.info(f"Found {text}")
-                return True
-        else:
-            if poco(textMatches = textMatches):
-                logger.info(f"Found {textMatches}")
-                return True
+        try:
+            if id != None:
+                if poco(id):
+                    logger.info(f"Found {id}")
+                    return True
+            elif text != None:
+                if poco(text = text):
+                    logger.info(f"Found {text}")
+                    return True
+            else:
+                if poco(textMatches = textMatches):
+                    logger.info(f"Found {textMatches}")
+                    return True
+        except Exception as e:
+            logger.error(""+e)
         sleep(1)
     if id != None:
         logger.info(f"Didn't Find {id}")
@@ -132,7 +141,6 @@ def pwait_until(id = None, text = None, textMatches = None, times = 10):
         logger.info(f"Didn't Find  {textMatches}")
     return False
 
-    
 def back_to_main():
     pwait_click("com.tigerbrokers.stock:id/btn_cancel")
 
@@ -311,7 +319,15 @@ def input_trade_pass():
     keyevent("KEYCODE_5")
     keyevent("KEYCODE_4")
 
-
+def check_update():
+    if pwait_click("com.tigerbrokers.stock:id/btn_dialog_update_positive"):
+        if pwait_until("com.android.packageinstaller:id/ok_button",times=30):
+            pwait_click("com.android.packageinstaller:id/ok_button")
+            if pwait_until("com.android.packageinstaller:id/launch_button",times=30):
+                pwait_click("com.android.packageinstaller:id/launch_button")
+                sleep(10)
+        
+# check_update()
 
 def run():
     try:
@@ -320,6 +336,7 @@ def run():
         sleep(5)
         start_app("com.tigerbrokers.stock")
         sleep(10)
+        check_update()
         accounts = [True,False]
         for cash in accounts:
             orders,stock_list = read_orders(cash)
