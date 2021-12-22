@@ -1,6 +1,5 @@
 code=JJM,price=63.0,count=55, direction=卖出
 code=UYM,price=105.0,count=120, direction=卖出
-code=TTT,price=29.0,count=48, direction=卖出
 code=GME,price=399.0,count=1, direction=卖出
 code=AMC,price=60.0,count=1, direction=卖出
 code=NCLH,price=15.0,count=667, direction=买入
