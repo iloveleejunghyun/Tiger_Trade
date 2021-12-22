@@ -328,8 +328,9 @@ def check_update():
                 sleep(10)
         
 # check_update()
-
+import os
 def run():
+    print(os.getcwd())
     try:
         logger.info("start to trade")
         stop_app("com.tigerbrokers.stock")
