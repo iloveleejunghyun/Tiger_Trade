@@ -269,14 +269,16 @@ def switch_account(cash=False):
     pwait_click("com.tigerbrokers.stock:id/fab_text_action_left")
     pwait_until("com.tigerbrokers.stock:id/account_title")
     eles = poco("com.tigerbrokers.stock:id/account_title")
-    logger.info(len(eles))
+#     logger.info(len(eles))
     if cash == True:
-        eles[0].click()
-        pwait_click("com.tigerbrokers.stock:id/stock_trade_entry_deal")
+#         eles[0].click()
+        pwait_click(text="综合账户")
+#         pwait_click("com.tigerbrokers.stock:id/stock_trade_entry_deal")
         logger.info("Switch to cash account")
         input_trade_pass()
     else:
-        eles[1].click()
+#         eles[1].click()
+        pwait_click(text="老虎模拟账户")
         logger.info("Switch to simulation account")
         
 def trade(stock_code, stock_price, stock_count, direction):
@@ -341,7 +343,10 @@ def check_update():
 # check_update()
 import os
 def run():
-    print(os.getcwd())
+#     print(os.getcwd())
+#     pclick(text="综合账户")
+    switch_account(True)
+#     switch_account(False)
     try:
         logger.info("start to trade")
         stop_app("com.tigerbrokers.stock")
@@ -349,7 +354,7 @@ def run():
         start_app("com.tigerbrokers.stock")
         sleep(10)
         check_update()
-        accounts = [True,False]
+        accounts = [False, True]
         for cash in accounts:
             orders,stock_list = read_orders(cash)
             logger.info(f"read {orders}")
