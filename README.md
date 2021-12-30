@@ -11,8 +11,8 @@ Tiger_Trade放D:\下
 设置auto-scheduler自动启动
 
 Backlog:
-切换账户失败
+切换账户失败，修改切换账户的方法，加详细日志。增加截图
 1. 回到主界面会等很久。
-
+Cannot find any visible node by query UIObjectProxy of "com.tigerbrokers.stock:id/edit_ab_search_stock" 增加截图
 
 

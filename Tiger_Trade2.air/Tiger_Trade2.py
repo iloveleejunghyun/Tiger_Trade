@@ -141,6 +141,13 @@ def pwait_until(id = None, text = None, textMatches = None, times = 10):
         logger.info(f"Didn't Find  {textMatches}")
     return False
 
+def screenshot(errmsg):
+    name = time.strftime('%Y-%m-%d') + '-' +errmsg
+    import os
+    name = f'{os.getcwd()}\\errscreen\\{name}.png'
+    print(name)
+    snapshot(filename=name,msg='massage')
+    
 def back_to_main():
     pwait_click("com.tigerbrokers.stock:id/btn_cancel")
 
@@ -161,7 +168,8 @@ def check_order(orders, stock_list, cash=False):
     pwait_click("com.tigerbrokers.stock:id/text_main_bottom_trade")
     pwait_click(text="订单")
     #已成交
-    pwait_click(text="已成交")
+    if not pwait_click(text="已成交"):
+        screenshot('No已成交')
     if not pwait_until("com.tigerbrokers.stock:id/text_item_order_history_code"):
         logger.error("没有找到历史订单，退出")
         return orders
@@ -265,9 +273,11 @@ def switch_account(cash=False):
     if cash == True:
         eles[0].click()
         pwait_click("com.tigerbrokers.stock:id/stock_trade_entry_deal")
+        logger.info("Switch to cash account")
         input_trade_pass()
     else:
         eles[1].click()
+        logger.info("Switch to simulation account")
         
 def trade(stock_code, stock_price, stock_count, direction):
     try:
@@ -305,6 +315,7 @@ def trade(stock_code, stock_price, stock_count, direction):
         logger.info(f"{stock_code}挂单成功")
     except Exception as e:
         logger.info(e)
+        screenshot('TradeFail')
 
 # eles = poco("com.tigerbrokers.stock:id/edit_number")
 # print(eles)
