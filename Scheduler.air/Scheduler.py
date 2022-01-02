@@ -46,6 +46,38 @@ def start_trader():
     logger.info("Finish trade")
     return
 
+def start_mudi():
+    import time
+    localtime = time.localtime(time.time())
+
+    if not (localtime.tm_hour >= 21):
+        logger.info("Can't mudi before 21:00")
+        return
+    import os
+    if not os.path.exists("mudi.log"):
+        logger.info("create mudi.log")
+        with open("mudi.log", 'w'):
+            pass
+    # 格式化成2016-03-20 11:45:39形式
+    date =  time.strftime("%Y-%m-%d", time.localtime()) + '\n'
+    with open("mudi.log", 'r') as f:
+        lines = f.readlines()
+        logger.info(lines)
+        if len(lines) != 0:
+            line = lines[-1]
+            
+            logger.info(date + ","+line)
+            if date == line:
+                logger.info("Have mudi today")
+                return
+    logger.info("Start to mudi today")
+    res = os.system('D: && cd D:\mudi\mudi.air && D:\AirtestIDE\AirtestIDE runner D:\mudi\mudi.air  --log D:\mudi\log')
+    logger.info(res)
+    with open("mudi.log", 'a') as f:
+        f.write(date)
+    logger.info("Finish mudi")
+    return
+
 while True:
     try:
         dev = connect_device("android://127.0.0.1:5037/127.0.0.1:62001?cap_method=JAVACAP&&ori_method=ADBORI&&touch_method=MINITOUCH")
@@ -57,6 +89,7 @@ while True:
 for i in range(100000):
     try:
         start_trader()
+        start_mudi()
         sleep(600)
        
     except Exception as e:

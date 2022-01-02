@@ -142,7 +142,7 @@ def pwait_until(id = None, text = None, textMatches = None, times = 10):
     return False
 
 def screenshot(errmsg):
-    name = time.strftime('%Y-%m-%d') + '-' +errmsg
+    name = time.strftime('%Y%m%d %H%M%S') + '-' +errmsg
     import os
     name = f'{os.getcwd()}\\errscreen\\{name}.png'
     print(name)
@@ -271,15 +271,16 @@ def switch_account(cash=False):
     eles = poco("com.tigerbrokers.stock:id/account_title")
 #     logger.info(len(eles))
     if cash == True:
-#         eles[0].click()
-        pwait_click(text="综合账户")
+        eles[0].click()
+#         pwait_click(text="综合账户")
 #         pwait_click("com.tigerbrokers.stock:id/stock_trade_entry_deal")
         logger.info("Switch to cash account")
         input_trade_pass()
     else:
-#         eles[1].click()
-        pwait_click(text="老虎模拟账户")
+        eles[1].click()
+#         pwait_click(text="老虎模拟账户")
         logger.info("Switch to simulation account")
+    #如果左边匡没有关闭，则关闭
         
 def trade(stock_code, stock_price, stock_count, direction):
     try:
@@ -345,7 +346,7 @@ import os
 def run():
 #     print(os.getcwd())
 #     pclick(text="综合账户")
-    switch_account(True)
+##    switch_account(True)
 #     switch_account(False)
     try:
         logger.info("start to trade")
@@ -371,3 +372,4 @@ def run():
 run()
 # poco("com.tigerbrokers.stock:id/trade_entry_point").children(desc="交易").click()
 # poco("com.tigerbrokers.stock:id/text_search_stock_code")[0].click()
+
