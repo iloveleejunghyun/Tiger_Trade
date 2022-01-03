@@ -355,7 +355,7 @@ def run():
         start_app("com.tigerbrokers.stock")
         sleep(10)
         check_update()
-        accounts = [False, True]
+        accounts = [True, False]
         for cash in accounts:
             orders,stock_list = read_orders(cash)
             logger.info(f"read {orders}")
