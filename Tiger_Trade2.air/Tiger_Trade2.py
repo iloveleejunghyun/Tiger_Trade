@@ -133,9 +133,11 @@ def append_history_orders(history_orders, cash=False):
 def switch_account(cash=False):
     back_to_main()
     
-    pwait_click("com.tigerbrokers.stock:id/text_main_bottom_trade")
+    if not pwait_click("com.tigerbrokers.stock:id/text_main_bottom_trade"):
+        screenshot('NoBottomTrade')
 
-    pwait_click("com.tigerbrokers.stock:id/fab_text_action_left")
+    if not pwait_click("com.tigerbrokers.stock:id/fab_text_action_left"):
+        screenshot('NoSwitchLeft')
     pwait_until("com.tigerbrokers.stock:id/account_title")
     eles = poco("com.tigerbrokers.stock:id/account_title")
 #     logger.info(len(eles))
@@ -245,4 +247,5 @@ def run():
 run()
 # poco("com.tigerbrokers.stock:id/trade_entry_point").children(desc="交易").click()
 # poco("com.tigerbrokers.stock:id/text_search_stock_code")[0].click()
+
 
