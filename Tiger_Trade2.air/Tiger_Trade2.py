@@ -18,16 +18,17 @@ dev = connect_device("android://127.0.0.1:5037/127.0.0.1:62001?cap_method=JAVACA
 
     
 def back_to_main():
-    pwait_click("com.tigerbrokers.stock:id/btn_cancel")
+    pwait_click("com.tigerbrokers.stock:id/btn_cancel", times=1)
 
     #advertisement
     pwait_click(text="关闭弹框",times=1)
 
-    for _ in range(5):
-        if not pwait_click("com.tigerbrokers.stock:id/text_main_bottom_market",times=1):
+    for _ in range(3):
+        if not pwait_click("com.tigerbrokers.stock:id/text_main_bottom_market",times=1): #有广告的时候能否找到这个?
+            pwait_click("com.tigerbrokers.stock:id/btn_cancel", times=1)
             pwait_click(text="关闭弹框",times=1)
             keyevent("KEYCODE_BACK")
-            sleep(1)
+            sleep(0.5)
         else:
             return
             
@@ -217,10 +218,14 @@ def check_update():
                 sleep(10)
 
 def run():
-#     print(os.getcwd())
-#     pclick(text="综合账户")
-#     pwait_until(text='请输入交易密码')
-#     switch_account(True)
+#     pwait_until("com.tigerbrokers.stock:id/btn_cancel", times=1)
+
+    #advertisement
+#     pwait_until(text="关闭弹框",times=1)
+
+#     for _ in range(5):
+#     pwait_until("com.tigerbrokers.stock:id/text_main_bottom_market",times=1) #有广告的时候能否找到这个?
+#             pwait_click(text="关闭弹框",times=1)
 #     sleep(500)
 #     switch_account(False)
     try:
@@ -229,6 +234,7 @@ def run():
         sleep(5)
         start_app("com.tigerbrokers.stock")
         sleep(10)
+        back_to_main()
         check_update()
         accounts = [True, False]
         for cash in accounts:
