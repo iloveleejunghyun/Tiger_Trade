@@ -139,7 +139,8 @@ def pwait_until(id = None, text = None, textMatches = None, times = 10):
 
 def screenshot(errmsg):
     name = time.strftime('%Y%m%d %H%M%S') + '-' +errmsg
-    
+    if not os.path.exists('errscreen'):
+        os.mkdir('errscreen')
     name = f'{os.getcwd()}\\errscreen\\{name}.png'
     print(name)
     snapshot(filename=name,msg='massage')
