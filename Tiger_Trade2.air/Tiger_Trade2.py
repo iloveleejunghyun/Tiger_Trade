@@ -233,7 +233,7 @@ def run():
         stop_app("com.tigerbrokers.stock")
         sleep(5)
         start_app("com.tigerbrokers.stock")
-        sleep(10)
+        sleep(20)
         back_to_main()
         check_update()
         accounts = [True, False]
