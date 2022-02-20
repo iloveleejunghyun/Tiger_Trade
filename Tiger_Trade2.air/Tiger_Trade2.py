@@ -216,6 +216,10 @@ def check_update():
             if pwait_until("com.android.packageinstaller:id/launch_button",times=30):
                 pwait_click("com.android.packageinstaller:id/launch_button")
                 sleep(10)
+                
+def close_update():
+    pwait_click("com.tigerbrokers.stock:id/image_dialog_update_close",times=30)
+    sleep(10)
 
 def run():
 #     pwait_until("com.tigerbrokers.stock:id/btn_cancel", times=1)
@@ -234,8 +238,10 @@ def run():
         sleep(5)
         start_app("com.tigerbrokers.stock")
         sleep(20)
+        
+        close_update()
         back_to_main()
-        check_update()
+#         check_update()
         accounts = [True, False]
         for cash in accounts:
             orders,stock_list = read_orders(cash)
